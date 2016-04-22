@@ -7,6 +7,8 @@ if [ "${TAG}" == "" ]; then
     exit 1
 fi
 
+./build.sh
+
 git tag $TAG || exit 1
 git push --tags || exit 1
 
