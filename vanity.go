@@ -68,7 +68,7 @@ func addressFromMasterSeed(masterSeed []byte, network  *chaincfg.Params) (string
 
 func findPattern(patterns []string, network *chaincfg.Params, wg *sync.WaitGroup, resultChan chan<- interface{}, quitChan <-chan bool, threadNum int) {
 	seedLen := 16
-	uintLen := 4
+	uintLen := 2
 	baseSeedLen := seedLen - uintLen
 
 	var c int64 = 0
@@ -84,8 +84,8 @@ func findPattern(patterns []string, network *chaincfg.Params, wg *sync.WaitGroup
 		baseSeed = baseSeed[0:baseSeedLen]
 
 		// loop until we reach max unit16
-		var i uint16 = 1;
-		for ; i <= MAX_UINT16; i++ {
+		var i uint16 = 0;
+		for ; i < MAX_UINT16; i++ {
 
 			// check quitChain
 			select {
@@ -98,7 +98,7 @@ func findPattern(patterns []string, network *chaincfg.Params, wg *sync.WaitGroup
 
 			// turn i into a byte array
 			b := make([]byte, uintLen)
-			binary.LittleEndian.PutUint16(b, i)
+			binary.BigEndian.PutUint16(b, i)
 
 			// append base seed with i byte array
 			var masterSeed []byte
@@ -110,10 +110,11 @@ func findPattern(patterns []string, network *chaincfg.Params, wg *sync.WaitGroup
 				panic(err)
 			}
 
+			// fmt.Printf("[%d] %s %x \n", i, addressstr, masterSeed)
+
 			// check patterns
 			for _, pattern := range patterns {
 				if (strings.HasPrefix(strings.ToLower(addressstr), pattern)) {
-					// fmt.Printf("[%d] %s %x \n", i, addressstr, masterSeed)
 					// copy seed to avoid overwriting
 					resultSeed := make([]byte, len(masterSeed))
 					copy(resultSeed, masterSeed)
@@ -148,6 +149,7 @@ func main() {
 	patterns := []string{prefix}
 
 	start := time.Now()
+	lastProgressReport := start
 	wg := sync.WaitGroup{}
 	resultsChan := make(chan interface{}, *threads * 3)
 	quitChan := make(chan bool, *threads)
@@ -172,8 +174,9 @@ out:
 					totalLoops += loops
 				}
 
-				if totalLoops % 10000 == 0 {
+				if time.Since(lastProgressReport) >= time.Second * 10 {
 					elapsed := time.Since(start)
+					lastProgressReport = time.Now()
 
 					fmt.Printf("%d loops in %.2f sec: %.2f loops/sec \n", totalLoops, elapsed.Seconds(), float64(totalLoops) / elapsed.Seconds())
 				}
