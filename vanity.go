@@ -138,7 +138,7 @@ func main() {
 
 	flag.Parse()
 
-	prefix := flag.Arg(0)
+	prefix := strings.ToLower(flag.Arg(0))
 
 	if prefix == "" {
 		panic("no prefix")
