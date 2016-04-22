@@ -15,8 +15,8 @@ import (
 var MAX_UINT16 = uint16(65535)
 
 type Child struct {
-	i uint32;
-	hardened bool;
+	I uint32;
+	Hardened bool;
 }
 
 type findProgress struct {
@@ -32,8 +32,8 @@ type findResult struct {
 func derive(extKey *hdkeychain.ExtendedKey, children []Child) (*hdkeychain.ExtendedKey, error) {
 	var err error;
 	for _, child := range children {
-		i := child.i;
-		if child.hardened {
+		i := child.I;
+		if child.Hardened {
 			i += hdkeychain.HardenedKeyStart;
 		}
 
